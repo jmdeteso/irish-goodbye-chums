@@ -7,6 +7,7 @@ import leprechaun from "@/assets/leprechaun.png";
 import { toast } from "sonner";
 import FriendsList from "@/components/FriendsList";
 import PartyCard from "@/components/PartyCard";
+import InviteFriendsModal from "@/components/InviteFriendsModal";
 import { Plus, LogOut, Users, PartyPopper, ArrowRight } from "lucide-react";
 
 interface Party {
@@ -25,6 +26,7 @@ const Dashboard = () => {
   const [partyName, setPartyName] = useState("");
   const [activeTab, setActiveTab] = useState<"parties" | "friends">("parties");
   const [creating, setCreating] = useState(false);
+  const [inviteParty, setInviteParty] = useState<Party | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -66,10 +68,19 @@ const Dashboard = () => {
     if (error) {
       toast.error("Failed to create party");
     } else {
-      toast.success("Party created! Now copy the link and share it 🎉");
+      toast.success("Party created! 🎉");
       setPartyName("");
       setShowNewParty(false);
-      fetchParties();
+      const { data: newParties } = await supabase
+        .from("parties")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (newParties) {
+        setParties(newParties);
+        // Show invite modal for the just-created party
+        const created = newParties[0];
+        if (created) setInviteParty(created);
+      }
     }
     setCreating(false);
   };
@@ -232,6 +243,16 @@ const Dashboard = () => {
           <FriendsList onUpdate={handleFriendsUpdated} />
         )}
       </main>
+
+      <AnimatePresence>
+        {inviteParty && (
+          <InviteFriendsModal
+            partyName={inviteParty.name}
+            shareLink={`${window.location.origin}/party/${inviteParty.share_code}`}
+            onClose={() => setInviteParty(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
