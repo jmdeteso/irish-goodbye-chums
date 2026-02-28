@@ -251,28 +251,58 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
                     <h2 className="font-display text-2xl font-bold text-foreground mb-2">
                       Ready for the Irish Exit?
                     </h2>
-                    <p className="text-muted-foreground mb-2">
-                      This will send a fun leprechaun farewell to:
+                    <p className="text-muted-foreground mb-1">
+                      Tap the crown to mark the host — they'll get a special thank-you! 👑
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Everyone else gets the classic farewell.
                     </p>
 
                     <div className="flex flex-col gap-2 mb-6">
-                      {checkedInFriends.map((f) => (
-                        <div
-                          key={f.friend_id}
-                          className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2"
-                        >
-                          <div className="text-left">
-                            <span className="font-semibold text-foreground text-sm block">{f.friends.name}</span>
-                            <span className="text-xs text-muted-foreground">{f.friends.phone_number}</span>
-                          </div>
-                          <button
-                            onClick={() => sendGoodbye(f)}
-                            className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                      {checkedInFriends.map((f) => {
+                        const isHost = hostId === f.friend_id;
+                        return (
+                          <div
+                            key={f.friend_id}
+                            className={`flex items-center justify-between rounded-lg border px-4 py-2 transition-colors ${
+                              isHost
+                                ? "border-secondary bg-secondary/10"
+                                : "border-border bg-card"
+                            }`}
                           >
-                            Text just them
-                          </button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setHostId(isHost ? null : f.friend_id)}
+                                className={`rounded-full p-1.5 transition-colors ${
+                                  isHost
+                                    ? "bg-secondary text-secondary-foreground"
+                                    : "bg-muted text-muted-foreground hover:bg-secondary/20"
+                                }`}
+                                title={isHost ? "Remove as host" : "Mark as host"}
+                              >
+                                <Crown className="h-3.5 w-3.5" />
+                              </button>
+                              <div className="text-left">
+                                <span className="font-semibold text-foreground text-sm block">
+                                  {f.friends.name}
+                                  {isHost && (
+                                    <span className="ml-1.5 text-xs font-medium text-secondary">
+                                      Host
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="text-xs text-muted-foreground">{f.friends.phone_number}</span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => sendGoodbye(f)}
+                              className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                            >
+                              Text just them
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <p className="text-xs text-muted-foreground mb-4">
