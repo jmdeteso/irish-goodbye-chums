@@ -65,29 +65,6 @@ const ContactCard = ({ contact, onPing }: ContactCardProps) => {
       animate={{ opacity: 1, y: 0 }}
       className="relative overflow-visible rounded-xl border border-border bg-card p-4 transition-all"
     >
-      {/* Shamrock confetti */}
-      <AnimatePresence>
-        {confetti.map((piece) => (
-          <motion.span
-            key={piece.id}
-            initial={{ opacity: 1, x: 0, y: 0, scale: 0, rotate: 0 }}
-            animate={{
-              opacity: [1, 1, 0],
-              x: piece.x,
-              y: piece.y,
-              scale: piece.scale,
-              rotate: piece.rotation,
-            }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1, delay: piece.delay, ease: "easeOut" }}
-            className="pointer-events-none absolute right-16 top-4 z-10 text-xl"
-            style={{ originX: 0.5, originY: 0.5 }}
-          >
-            {piece.emoji}
-          </motion.span>
-        ))}
-      </AnimatePresence>
-
       <div className="flex items-center gap-4">
         {/* Avatar */}
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary font-display text-lg font-bold text-primary-foreground">
@@ -125,23 +102,44 @@ const ContactCard = ({ contact, onPing }: ContactCardProps) => {
         </button>
       </div>
 
-      {/* Message popup */}
+      {/* Message popup with confetti */}
       <AnimatePresence>
         {showMessage && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 10 }}
-            className="mt-4 flex items-start gap-3 rounded-lg bg-muted p-3"
+            className="relative mt-4 overflow-visible rounded-lg bg-muted p-3"
           >
-            <img
-              src={leprechaun}
-              alt="Leprechaun"
-              className="h-10 w-10 shrink-0 animate-wave"
-            />
-            <p className="text-sm text-foreground font-medium leading-relaxed">
-              {message}
-            </p>
+            {/* Shamrock confetti bursting from the message */}
+            {confetti.map((piece) => (
+              <motion.span
+                key={piece.id}
+                initial={{ opacity: 1, x: 0, y: 0, scale: 0, rotate: 0 }}
+                animate={{
+                  opacity: [1, 1, 0],
+                  x: piece.x,
+                  y: piece.y,
+                  scale: piece.scale,
+                  rotate: piece.rotation,
+                }}
+                transition={{ duration: 1, delay: piece.delay, ease: "easeOut" }}
+                className="pointer-events-none absolute left-1/2 top-1/2 z-10 text-xl"
+              >
+                {piece.emoji}
+              </motion.span>
+            ))}
+
+            <div className="flex items-start gap-3">
+              <img
+                src={leprechaun}
+                alt="Leprechaun"
+                className="h-10 w-10 shrink-0 animate-wave"
+              />
+              <p className="text-sm text-foreground font-medium leading-relaxed">
+                {message}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
