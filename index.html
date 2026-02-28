@@ -24,6 +24,28 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // One-time fix: clear stale service workers and caches that may serve blank pages
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          var needsReload = false;
+          registrations.forEach(function(reg) {
+            // If the page loaded with no content, the SW is stale — nuke it
+            if (!document.querySelector('script[type="module"]') || document.title === '') {
+              reg.unregister();
+              needsReload = true;
+            }
+          });
+          if (needsReload && 'caches' in window) {
+            caches.keys().then(function(names) {
+              Promise.all(names.map(function(name) { return caches.delete(name); })).then(function() {
+                window.location.reload();
+              });
+            });
+          }
+        });
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
