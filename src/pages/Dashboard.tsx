@@ -68,10 +68,19 @@ const Dashboard = () => {
     if (error) {
       toast.error("Failed to create party");
     } else {
-      toast.success("Party created! Now copy the link and share it 🎉");
+      toast.success("Party created! 🎉");
       setPartyName("");
       setShowNewParty(false);
-      fetchParties();
+      const { data: newParties } = await supabase
+        .from("parties")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (newParties) {
+        setParties(newParties);
+        // Show invite modal for the just-created party
+        const created = newParties[0];
+        if (created) setInviteParty(created);
+      }
     }
     setCreating(false);
   };
