@@ -32,12 +32,10 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
   const { user } = useAuth();
   const [image, setImage] = useState<string | null>(null);
   const [stickers, setStickers] = useState<PlacedSticker[]>([]);
-  const [aiProcessing, setAiProcessing] = useState(false);
-  const [aiResult, setAiResult] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"stickers" | "ai">("stickers");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
