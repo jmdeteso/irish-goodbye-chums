@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, Users, Trash2 } from "lucide-react";
+import { Copy, Users, Trash2, Camera } from "lucide-react";
+import PhotoEditor from "@/components/PhotoEditor";
 
 interface Party {
   id: string;
@@ -19,6 +20,7 @@ interface PartyCardProps {
 
 const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
   const [checkinCount, setCheckinCount] = useState(0);
+  const [showPhotoEditor, setShowPhotoEditor] = useState(false);
 
   useEffect(() => {
     fetchCheckins();
@@ -55,34 +57,52 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
   });
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="font-display text-lg font-bold text-foreground">{party.name}</h3>
-          <p className="text-sm text-muted-foreground">{formattedDate}</p>
+    <>
+      <div className="rounded-xl border border-border bg-card p-4">
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <h3 className="font-display text-lg font-bold text-foreground">{party.name}</h3>
+            <p className="text-sm text-muted-foreground">{formattedDate}</p>
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
+            <Users className="h-3.5 w-3.5" />
+            {checkinCount} checked in
+          </div>
         </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-          <Users className="h-3.5 w-3.5" />
-          {checkinCount} checked in
+
+        <div className="flex gap-2">
+          <button
+            onClick={copyLink}
+            className="flex-1 flex items-center justify-center gap-2 rounded-full bg-gradient-irish px-4 py-2 text-sm font-semibold text-primary-foreground shadow-irish hover:brightness-110 active:scale-95 transition-all"
+          >
+            <Copy className="h-4 w-4" /> Copy Link
+          </button>
+          <button
+            onClick={() => setShowPhotoEditor(true)}
+            className="flex items-center justify-center gap-1.5 rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground shadow-gold hover:brightness-110 active:scale-95 transition-all"
+          >
+            <Camera className="h-4 w-4" /> Pics
+          </button>
+          <button
+            onClick={deleteParty}
+            className="rounded-full p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title="Delete party"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <button
-          onClick={copyLink}
-          className="flex-1 flex items-center justify-center gap-2 rounded-full bg-gradient-irish px-4 py-2 text-sm font-semibold text-primary-foreground shadow-irish hover:brightness-110 active:scale-95 transition-all"
-        >
-          <Copy className="h-4 w-4" /> Copy Party Link
-        </button>
-        <button
-          onClick={deleteParty}
-          className="rounded-full p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-          title="Delete party"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
+      <AnimatePresence>
+        {showPhotoEditor && (
+          <PhotoEditor
+            partyId={party.id}
+            partyName={party.name}
+            onClose={() => setShowPhotoEditor(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 
