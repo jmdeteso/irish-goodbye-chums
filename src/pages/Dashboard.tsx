@@ -7,6 +7,7 @@ import leprechaun from "@/assets/leprechaun.png";
 import { toast } from "sonner";
 import FriendsList from "@/components/FriendsList";
 import PartyCard from "@/components/PartyCard";
+import InviteFriendsModal from "@/components/InviteFriendsModal";
 import { Plus, LogOut, Users, PartyPopper, ArrowRight } from "lucide-react";
 
 interface Party {
