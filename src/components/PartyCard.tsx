@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, Users, Trash2, Camera, Send, Share2, Check } from "lucide-react";
+import { Copy, Users, Trash2, Camera, Send, Share2, Check, Crown } from "lucide-react";
 import PhotoEditor from "@/components/PhotoEditor";
-import { getRandomMessage } from "@/lib/contacts";
+import { getRandomMessage, getRandomHostMessage } from "@/lib/contacts";
 
 interface Party {
   id: string;
@@ -31,6 +31,7 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
   const [showGoodbye, setShowGoodbye] = useState(false);
   const [showCheckins, setShowCheckins] = useState(false);
   const [goodbyeSent, setGoodbyeSent] = useState(false);
+  const [hostId, setHostId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCheckins();
@@ -69,6 +70,8 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
 
   const handleIrishGoodbye = () => {
     setShowGoodbye(true);
+    setHostId(null);
+    setGoodbyeSent(false);
   };
 
   const sendGoodbye = (friend: CheckedInFriend) => {
@@ -80,20 +83,33 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
 
   const sendAllGoodbyes = () => {
     const message = getRandomMessage();
+    const hostMessage = getRandomHostMessage();
 
-    if (navigator.share) {
-      navigator.share({
-        title: "Irish Goodbye 🍀",
-        text: message,
-      }).catch(() => {
-        if (checkedInFriends.length > 0) {
-          const phones = checkedInFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
+    // Send host message separately if a host is selected
+    if (hostId) {
+      const host = checkedInFriends.find(f => f.friend_id === hostId);
+      if (host) {
+        const hostPhone = host.friends.phone_number.replace(/\D/g, "");
+        window.open(`sms:${hostPhone}?body=${encodeURIComponent(hostMessage)}`, "_blank");
+      }
+    }
+
+    // Send regular goodbye to non-host friends
+    const nonHostFriends = checkedInFriends.filter(f => f.friend_id !== hostId);
+
+    if (nonHostFriends.length > 0) {
+      if (navigator.share) {
+        navigator.share({
+          title: "Irish Goodbye 🍀",
+          text: message,
+        }).catch(() => {
+          const phones = nonHostFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
           window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
-        }
-      });
-    } else if (checkedInFriends.length > 0) {
-      const phones = checkedInFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
-      window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
+        });
+      } else {
+        const phones = nonHostFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
+        window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
+      }
     }
 
     setGoodbyeSent(true);
@@ -235,28 +251,58 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
                     <h2 className="font-display text-2xl font-bold text-foreground mb-2">
                       Ready for the Irish Exit?
                     </h2>
-                    <p className="text-muted-foreground mb-2">
-                      This will send a fun leprechaun farewell to:
+                    <p className="text-muted-foreground mb-1">
+                      Tap the crown to mark the host — they'll get a special thank-you! 👑
+                    </p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      Everyone else gets the classic farewell.
                     </p>
 
                     <div className="flex flex-col gap-2 mb-6">
-                      {checkedInFriends.map((f) => (
-                        <div
-                          key={f.friend_id}
-                          className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2"
-                        >
-                          <div className="text-left">
-                            <span className="font-semibold text-foreground text-sm block">{f.friends.name}</span>
-                            <span className="text-xs text-muted-foreground">{f.friends.phone_number}</span>
-                          </div>
-                          <button
-                            onClick={() => sendGoodbye(f)}
-                            className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                      {checkedInFriends.map((f) => {
+                        const isHost = hostId === f.friend_id;
+                        return (
+                          <div
+                            key={f.friend_id}
+                            className={`flex items-center justify-between rounded-lg border px-4 py-2 transition-colors ${
+                              isHost
+                                ? "border-secondary bg-secondary/10"
+                                : "border-border bg-card"
+                            }`}
                           >
-                            Text just them
-                          </button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => setHostId(isHost ? null : f.friend_id)}
+                                className={`rounded-full p-1.5 transition-colors ${
+                                  isHost
+                                    ? "bg-secondary text-secondary-foreground"
+                                    : "bg-muted text-muted-foreground hover:bg-secondary/20"
+                                }`}
+                                title={isHost ? "Remove as host" : "Mark as host"}
+                              >
+                                <Crown className="h-3.5 w-3.5" />
+                              </button>
+                              <div className="text-left">
+                                <span className="font-semibold text-foreground text-sm block">
+                                  {f.friends.name}
+                                  {isHost && (
+                                    <span className="ml-1.5 text-xs font-medium text-secondary">
+                                      Host
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="text-xs text-muted-foreground">{f.friends.phone_number}</span>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => sendGoodbye(f)}
+                              className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                            >
+                              Text just them
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <p className="text-xs text-muted-foreground mb-4">
