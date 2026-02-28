@@ -83,20 +83,33 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
 
   const sendAllGoodbyes = () => {
     const message = getRandomMessage();
+    const hostMessage = getRandomHostMessage();
 
-    if (navigator.share) {
-      navigator.share({
-        title: "Irish Goodbye 🍀",
-        text: message,
-      }).catch(() => {
-        if (checkedInFriends.length > 0) {
-          const phones = checkedInFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
+    // Send host message separately if a host is selected
+    if (hostId) {
+      const host = checkedInFriends.find(f => f.friend_id === hostId);
+      if (host) {
+        const hostPhone = host.friends.phone_number.replace(/\D/g, "");
+        window.open(`sms:${hostPhone}?body=${encodeURIComponent(hostMessage)}`, "_blank");
+      }
+    }
+
+    // Send regular goodbye to non-host friends
+    const nonHostFriends = checkedInFriends.filter(f => f.friend_id !== hostId);
+
+    if (nonHostFriends.length > 0) {
+      if (navigator.share) {
+        navigator.share({
+          title: "Irish Goodbye 🍀",
+          text: message,
+        }).catch(() => {
+          const phones = nonHostFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
           window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
-        }
-      });
-    } else if (checkedInFriends.length > 0) {
-      const phones = checkedInFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
-      window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
+        });
+      } else {
+        const phones = nonHostFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
+        window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
+      }
     }
 
     setGoodbyeSent(true);
