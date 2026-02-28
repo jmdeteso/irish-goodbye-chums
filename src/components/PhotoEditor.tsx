@@ -203,8 +203,7 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
                 className="w-full rounded-xl"
               />
               {/* Sticker overlays (visual only, for preview) */}
-              {!aiResult &&
-                stickers.map((sticker) => (
+              {stickers.map((sticker) => (
                   <motion.button
                     key={sticker.id}
                     initial={{ scale: 0 }}
