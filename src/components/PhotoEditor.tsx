@@ -81,7 +81,7 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
 
-    const displayImage = aiResult || image;
+    const displayImage = image;
     if (!displayImage) return null;
 
     const img = new Image();
