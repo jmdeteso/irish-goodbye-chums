@@ -77,26 +77,6 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
     setStickers((prev) => prev.filter((s) => s.id !== id));
   };
 
-  const handleAiEnhance = async (style: string) => {
-    if (!image) {
-      toast.error("Upload a photo first!");
-      return;
-    }
-    setAiProcessing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("irish-photo-edit", {
-        body: { imageBase64: image, style },
-      });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      setAiResult(data.image);
-      toast.success("Photo enhanced with Irish magic! ✨");
-    } catch (err: any) {
-      toast.error(err.message || "AI enhancement failed");
-    }
-    setAiProcessing(false);
-  };
-
   const renderCanvas = useCallback(async (): Promise<Blob | null> => {
     const canvas = canvasRef.current;
     if (!canvas) return null;
