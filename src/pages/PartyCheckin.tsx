@@ -135,8 +135,8 @@ const PartyCheckin = () => {
       {
         id: Date.now(),
         emoji,
-        x: 30 + Math.random() * 40,
-        y: 30 + Math.random() * 40,
+        x: 75 + Math.random() * 15,
+        y: 75 + Math.random() * 15,
         size: 32 + Math.random() * 16,
         rotation: Math.random() * 40 - 20,
       },
