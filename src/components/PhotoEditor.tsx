@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Camera, Download, X, Loader2 } from "lucide-react";
+import leprechaunImg from "@/assets/leprechaun.png";
 
 interface PhotoEditorProps {
   partyId: string;
