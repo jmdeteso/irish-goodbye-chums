@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, Users, Trash2, Camera, Send, Share2, Check } from "lucide-react";
+import { Copy, Users, Trash2, Camera, Send, Share2, Check, Crown } from "lucide-react";
 import PhotoEditor from "@/components/PhotoEditor";
 import { getRandomMessage, getRandomHostMessage } from "@/lib/contacts";
 
