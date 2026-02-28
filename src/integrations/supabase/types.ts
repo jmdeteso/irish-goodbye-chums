@@ -104,26 +104,36 @@ export type Database = {
       party_photos: {
         Row: {
           created_at: string
+          friend_id: string | null
           id: string
           party_id: string
           storage_path: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
+          friend_id?: string | null
           id?: string
           party_id: string
           storage_path: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
+          friend_id?: string | null
           id?: string
           party_id?: string
           storage_path?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "party_photos_friend_id_fkey"
+            columns: ["friend_id"]
+            isOneToOne: false
+            referencedRelation: "friends"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "party_photos_party_id_fkey"
             columns: ["party_id"]
