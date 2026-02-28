@@ -242,79 +242,29 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
           {/* Tabs */}
           {image && (
             <div className="mt-4">
-              <div className="flex gap-2 mb-3">
-                <button
-                  onClick={() => setActiveTab("stickers")}
-                  className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
-                    activeTab === "stickers"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  ☘️ Stickers
-                </button>
-                <button
-                  onClick={() => setActiveTab("ai")}
-                  className={`flex-1 flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
-                    activeTab === "ai"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  <Sparkles className="h-3.5 w-3.5" /> AI Magic
-                </button>
+              <p className="text-sm text-muted-foreground mb-2">
+                Tap to add stickers. Tap on placed stickers to remove.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {STICKERS.map((s) => (
+                  <button
+                    key={s.emoji}
+                    onClick={() => addSticker(s.emoji)}
+                    className="flex items-center gap-1.5 rounded-full bg-card border border-border px-3 py-1.5 text-sm hover:border-primary/50 active:scale-95 transition-all"
+                  >
+                    <span className="text-lg">{s.emoji}</span>
+                    <span className="text-muted-foreground">{s.label}</span>
+                  </button>
+                ))}
+                {stickers.length > 0 && (
+                  <button
+                    onClick={() => setStickers([])}
+                    className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:text-destructive active:scale-95 transition-all"
+                  >
+                    Clear all
+                  </button>
+                )}
               </div>
-
-              {activeTab === "stickers" && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Tap to add stickers. Tap on placed stickers to remove.
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {STICKERS.map((s) => (
-                      <button
-                        key={s.emoji}
-                        onClick={() => addSticker(s.emoji)}
-                        className="flex items-center gap-1.5 rounded-full bg-card border border-border px-3 py-1.5 text-sm hover:border-primary/50 active:scale-95 transition-all"
-                      >
-                        <span className="text-lg">{s.emoji}</span>
-                        <span className="text-muted-foreground">{s.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {activeTab === "ai" && (
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Let AI add Irish magic to your photo ✨
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {AI_STYLES.map((style) => (
-                      <button
-                        key={style.id}
-                        onClick={() => handleAiEnhance(style.id)}
-                        disabled={aiProcessing}
-                        className="rounded-xl border border-border bg-card p-3 text-left hover:border-primary/50 active:scale-[0.98] transition-all disabled:opacity-50"
-                      >
-                        <div className="font-semibold text-foreground text-sm">
-                          {style.label}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-0.5">
-                          {style.description}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                  {aiProcessing && (
-                    <div className="flex items-center justify-center gap-2 mt-4 text-sm text-primary">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Adding Irish magic...
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           )}
 
