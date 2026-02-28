@@ -13,20 +13,10 @@ interface PhotoEditorProps {
 
 const STICKERS = [
   { emoji: "☘️", label: "Shamrock" },
-  { emoji: "🍀", label: "Four-leaf" },
-  { emoji: "🍺", label: "Beer" },
-  { emoji: "🍻", label: "Cheers" },
+  { emoji: "🧙‍♂️", label: "Leprechaun" },
   { emoji: "🌈", label: "Rainbow" },
-  { emoji: "💚", label: "Heart" },
-  { emoji: "🎩", label: "Hat" },
-  { emoji: "🪙", label: "Coin" },
-];
-
-const AI_STYLES = [
-  { id: "shamrock", label: "☘️ Shamrocks", description: "Subtle shamrock decorations" },
-  { id: "beer", label: "🍺 Pub Style", description: "Irish pub theme" },
-  { id: "leprechaun", label: "🎩 Leprechaun", description: "Leprechaun & gold coins" },
-  { id: "full", label: "🌈 Full Irish", description: "The full festive treatment" },
+  { emoji: "🍺", label: "Beer" },
+  { emoji: "🍷", label: "Wine" },
 ];
 
 interface PlacedSticker {
