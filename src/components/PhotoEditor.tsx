@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Camera, Sparkles, Download, X, Loader2 } from "lucide-react";
+import { Camera, Download, X, Loader2 } from "lucide-react";
 
 interface PhotoEditorProps {
   partyId: string;
