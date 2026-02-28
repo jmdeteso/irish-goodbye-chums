@@ -13,7 +13,17 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  if (loading) return null;
+  if (loading) return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <motion.img
+        src={leprechaun}
+        alt="Loading..."
+        className="h-16 w-16"
+        animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+      />
+    </div>
+  );
   if (user) return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
