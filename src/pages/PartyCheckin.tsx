@@ -149,15 +149,12 @@ const PartyCheckin = () => {
           >
             <div className="grid grid-cols-2 gap-2">
               {photos.map((photo, i) => (
-                <motion.a
+                <motion.div
                   key={photo.id}
-                  href={getPhotoUrl(photo.storage_path)}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.05 }}
-                  className="aspect-square rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-colors"
+                  className="relative group aspect-square rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-colors"
                 >
                   <img
                     src={getPhotoUrl(photo.storage_path)}
@@ -165,7 +162,16 @@ const PartyCheckin = () => {
                     className="h-full w-full object-cover"
                     loading="lazy"
                   />
-                </motion.a>
+                  <a
+                    href={getPhotoUrl(photo.storage_path)}
+                    download={`party-photo-${i + 1}.jpg`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-foreground/70 px-2.5 py-1.5 text-xs font-semibold text-primary-foreground opacity-0 group-hover:opacity-100 sm:opacity-100 transition-opacity active:scale-95"
+                  >
+                    <Download className="h-3.5 w-3.5" /> Save
+                  </a>
+                </motion.div>
               ))}
             </div>
           </motion.div>
