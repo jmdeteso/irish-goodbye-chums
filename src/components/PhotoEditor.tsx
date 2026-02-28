@@ -158,7 +158,7 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
     toast.success("Photo downloaded! 📥");
   };
 
-  const displayImage = aiResult || image;
+  const displayImage = image;
 
   return (
     <motion.div
