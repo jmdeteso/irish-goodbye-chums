@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Copy, Users, Trash2, Camera, Send, Share2, Check } from "lucide-react";
 import PhotoEditor from "@/components/PhotoEditor";
-import { getRandomMessage } from "@/lib/contacts";
+import { getRandomMessage, getRandomHostMessage } from "@/lib/contacts";
 
 interface Party {
   id: string;
