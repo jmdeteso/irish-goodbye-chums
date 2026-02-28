@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 const STICKERS = [
   { emoji: "☘️", label: "Shamrock" },
-  { emoji: "🧙‍♂️", label: "Leprechaun" },
+  { emoji: "leprechaun", label: "Leprechaun", isImage: true },
   { emoji: "🌈", label: "Rainbow" },
   { emoji: "🍺", label: "Beer" },
   { emoji: "🍷", label: "Wine" },
@@ -18,6 +18,7 @@ const STICKERS = [
 interface PlacedSticker {
   id: number;
   emoji: string;
+  isImage?: boolean;
   x: number;
   y: number;
   size: number;
