@@ -20,6 +20,9 @@ const HOST_THANK_YOU_MESSAGES = [
 export const getRandomMessage = () =>
   GOODBYE_MESSAGES[Math.floor(Math.random() * GOODBYE_MESSAGES.length)];
 
+export const getRandomHostMessage = () =>
+  HOST_THANK_YOU_MESSAGES[Math.floor(Math.random() * HOST_THANK_YOU_MESSAGES.length)];
+
 export interface Contact {
   id: string;
   name: string;
