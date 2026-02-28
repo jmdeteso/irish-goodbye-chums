@@ -70,6 +70,8 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
 
   const handleIrishGoodbye = () => {
     setShowGoodbye(true);
+    setHostId(null);
+    setGoodbyeSent(false);
   };
 
   const sendGoodbye = (friend: CheckedInFriend) => {
