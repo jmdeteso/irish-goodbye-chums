@@ -89,7 +89,17 @@ const Dashboard = () => {
     fetchFriendCount();
   };
 
-  if (loading) return null;
+  if (loading) return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <motion.img
+        src={leprechaun}
+        alt="Loading..."
+        className="h-16 w-16"
+        animate={{ y: [0, -10, 0], rotate: [0, 5, -5, 0] }}
+        transition={{ duration: 1.5, repeat: Infinity }}
+      />
+    </div>
+  );
   if (!user) return <Navigate to="/auth" replace />;
 
   const hasFriends = (friendCount ?? 0) > 0;
