@@ -129,16 +129,17 @@ const PartyCheckin = () => {
     reader.readAsDataURL(file);
   };
 
-  const addSticker = (emoji: string) => {
+  const addSticker = (emoji: string, isImage?: boolean) => {
     if (!uploadImage) return;
     setUploadStickers((prev) => [
       ...prev,
       {
         id: Date.now(),
         emoji,
+        isImage,
         x: 70 + Math.random() * 15,
         y: 70 + Math.random() * 15,
-        size: 32 + Math.random() * 16,
+        size: 40 + Math.random() * 16,
         rotation: 15 + Math.random() * 20,
       },
     ]);
