@@ -113,7 +113,7 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
       };
       img.src = displayImage;
     });
-  }, [image, aiResult, stickers]);
+  }, [image, stickers]);
 
   const handleSave = async () => {
     if (!user) return;
