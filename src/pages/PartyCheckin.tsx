@@ -412,13 +412,17 @@ const PartyCheckin = () => {
                       style={{
                         left: `${sticker.x}%`,
                         top: `${sticker.y}%`,
-                        fontSize: `${sticker.size}px`,
+                        fontSize: sticker.isImage ? undefined : `${sticker.size}px`,
+                        width: sticker.isImage ? `${sticker.size}px` : undefined,
+                        height: sticker.isImage ? `${sticker.size}px` : undefined,
                         transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg)`,
                       }}
                       onClick={() => setUploadStickers((prev) => prev.filter((s) => s.id !== sticker.id))}
                       title="Tap to remove"
                     >
-                      {sticker.emoji}
+                      {sticker.isImage ? (
+                        <img src={leprechaun} alt="Leprechaun" className="w-full h-full object-contain" />
+                      ) : sticker.emoji}
                     </button>
                   ))}
                 </div>
