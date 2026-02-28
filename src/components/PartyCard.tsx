@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, Users, Trash2, Camera, Send } from "lucide-react";
+import { Copy, Users, Trash2, Camera, Send, Share2, Check } from "lucide-react";
 import PhotoEditor from "@/components/PhotoEditor";
 import { getRandomMessage } from "@/lib/contacts";
 
@@ -26,9 +26,10 @@ interface PartyCardProps {
 
 const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
   const [checkinCount, setCheckinCount] = useState(0);
+  const [checkedInFriends, setCheckedInFriends] = useState<CheckedInFriend[]>([]);
   const [showPhotoEditor, setShowPhotoEditor] = useState(false);
   const [showGoodbye, setShowGoodbye] = useState(false);
-  const [checkedInFriends, setCheckedInFriends] = useState<CheckedInFriend[]>([]);
+  const [showCheckins, setShowCheckins] = useState(false);
   const [goodbyeSent, setGoodbyeSent] = useState(false);
 
   useEffect(() => {
@@ -36,57 +37,48 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
   }, [party.id]);
 
   const fetchCheckins = async () => {
-    const { count } = await supabase
-      .from("party_checkins")
-      .select("*", { count: "exact", head: true })
-      .eq("party_id", party.id);
-    setCheckinCount(count ?? 0);
-  };
-
-  const fetchCheckedInFriends = async () => {
     const { data } = await supabase
       .from("party_checkins")
       .select("friend_id, friends(name, phone_number)")
       .eq("party_id", party.id);
-    if (data) setCheckedInFriends(data as unknown as CheckedInFriend[]);
+    if (data) {
+      const typed = data as unknown as CheckedInFriend[];
+      setCheckedInFriends(typed);
+      setCheckinCount(typed.length);
+    }
   };
 
   const shareLink = `${window.location.origin}/party/${party.share_code}`;
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(shareLink);
-    toast.success("Link copied! Share it with your mates 📋");
-  };
+  const sharePartyLink = async () => {
+    const text = `🍀 Check in to ${party.name}! Tap the link so I know you're here: ${shareLink}`;
 
-  const handleIrishGoodbye = async () => {
-    await fetchCheckedInFriends();
-    setShowGoodbye(true);
-  };
-
-  const sendGoodbye = async (friend: CheckedInFriend) => {
-    const message = getRandomMessage();
-    const phone = friend.friends.phone_number.replace(/\D/g, "");
-
-    // Try Web Share API first, fall back to SMS link
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: "Irish Goodbye 🍀",
-          text: message,
-        });
+        await navigator.share({ title: `${party.name} — Irish Goodbye`, text });
         return;
       } catch {
-        // User cancelled or not supported, fall back
+        // User cancelled
       }
     }
 
-    // Fall back to SMS link
+    // Fallback: copy
+    await navigator.clipboard.writeText(shareLink);
+    toast.success("Link copied! Paste it in your group chat 📋");
+  };
+
+  const handleIrishGoodbye = () => {
+    setShowGoodbye(true);
+  };
+
+  const sendGoodbye = (friend: CheckedInFriend) => {
+    const message = getRandomMessage();
+    const phone = friend.friends.phone_number.replace(/\D/g, "");
     const smsUrl = `sms:${phone}?body=${encodeURIComponent(message)}`;
     window.open(smsUrl, "_blank");
   };
 
   const sendAllGoodbyes = () => {
-    // Build a combined message with all names
     const message = getRandomMessage();
 
     if (navigator.share) {
@@ -94,10 +86,9 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
         title: "Irish Goodbye 🍀",
         text: message,
       }).catch(() => {
-        // Fallback: open SMS to first friend
         if (checkedInFriends.length > 0) {
-          const phone = checkedInFriends[0].friends.phone_number.replace(/\D/g, "");
-          window.open(`sms:${phone}?body=${encodeURIComponent(message)}`, "_blank");
+          const phones = checkedInFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
+          window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
         }
       });
     } else if (checkedInFriends.length > 0) {
@@ -126,47 +117,91 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
   return (
     <>
       <div className="rounded-xl border border-border bg-card p-4">
-        <div className="flex items-start justify-between mb-3">
+        <div className="flex items-start justify-between mb-2">
           <div>
             <h3 className="font-display text-lg font-bold text-foreground">{party.name}</h3>
             <p className="text-sm text-muted-foreground">{formattedDate}</p>
           </div>
-          <div className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-sm font-semibold text-primary">
-            <Users className="h-3.5 w-3.5" />
-            {checkinCount} checked in
-          </div>
+          <button
+            onClick={deleteParty}
+            className="rounded-full p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title="Delete party"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
         </div>
 
+        {/* Status / progress section */}
+        {checkinCount === 0 ? (
+          /* Step 1: No one checked in yet — prompt to share */
+          <div className="mb-3 rounded-lg bg-secondary/10 border border-secondary/30 p-3">
+            <p className="text-sm font-semibold text-foreground mb-1">
+              📨 Step 1: Share the party link
+            </p>
+            <p className="text-xs text-muted-foreground mb-2">
+              Send this to your group chat so your mates can check in. You'll see who's there before you do the Irish exit!
+            </p>
+          </div>
+        ) : (
+          /* People have checked in — show who */
+          <button
+            onClick={() => setShowCheckins(!showCheckins)}
+            className="mb-3 w-full rounded-lg bg-primary/5 border border-primary/20 p-3 text-left hover:bg-primary/10 transition-colors"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">
+                  {checkinCount} mate{checkinCount !== 1 ? "s" : ""} checked in
+                </span>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {showCheckins ? "Hide" : "Show"}
+              </span>
+            </div>
+            {showCheckins && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {checkedInFriends.map((f) => (
+                  <span
+                    key={f.friend_id}
+                    className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+                  >
+                    <Check className="h-3 w-3" /> {f.friends.name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </button>
+        )}
+
+        {/* Action buttons */}
         <div className="flex flex-col gap-2">
-          {/* Irish Goodbye button - the star of the show */}
-          {checkinCount > 0 && (
+          {/* Primary action: share link or irish goodbye */}
+          {checkinCount > 0 ? (
             <button
               onClick={handleIrishGoodbye}
               className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-irish px-4 py-3 text-sm font-bold text-primary-foreground shadow-irish hover:brightness-110 active:scale-95 transition-all"
             >
-              <Send className="h-4 w-4" /> Irish Goodbye 🍀
+              <Send className="h-4 w-4" /> Do the Irish Goodbye 🍀
             </button>
-          )}
+          ) : null}
 
           <div className="flex gap-2">
             <button
-              onClick={copyLink}
-              className="flex-1 flex items-center justify-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-semibold text-foreground hover:brightness-95 active:scale-95 transition-all"
+              onClick={sharePartyLink}
+              className={`flex-1 flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all active:scale-95 ${
+                checkinCount === 0
+                  ? "bg-gradient-irish text-primary-foreground shadow-irish hover:brightness-110"
+                  : "bg-muted text-foreground hover:brightness-95"
+              }`}
             >
-              <Copy className="h-4 w-4" /> Copy Link
+              <Share2 className="h-4 w-4" /> Share Link
             </button>
             <button
               onClick={() => setShowPhotoEditor(true)}
               className="flex items-center justify-center gap-1.5 rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground shadow-gold hover:brightness-110 active:scale-95 transition-all"
             >
               <Camera className="h-4 w-4" /> Pics
-            </button>
-            <button
-              onClick={deleteParty}
-              className="rounded-full p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              title="Delete party"
-            >
-              <Trash2 className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -200,8 +235,8 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
                     <h2 className="font-display text-2xl font-bold text-foreground mb-2">
                       Ready for the Irish Exit?
                     </h2>
-                    <p className="text-muted-foreground mb-6">
-                      Send a wee leprechaun farewell to {checkedInFriends.length} mate{checkedInFriends.length !== 1 ? "s" : ""}
+                    <p className="text-muted-foreground mb-2">
+                      This will send a fun leprechaun farewell to:
                     </p>
 
                     <div className="flex flex-col gap-2 mb-6">
@@ -210,16 +245,23 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
                           key={f.friend_id}
                           className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2"
                         >
-                          <span className="font-semibold text-foreground text-sm">{f.friends.name}</span>
+                          <div className="text-left">
+                            <span className="font-semibold text-foreground text-sm block">{f.friends.name}</span>
+                            <span className="text-xs text-muted-foreground">{f.friends.phone_number}</span>
+                          </div>
                           <button
                             onClick={() => sendGoodbye(f)}
                             className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
                           >
-                            Send individually
+                            Text just them
                           </button>
                         </div>
                       ))}
                     </div>
+
+                    <p className="text-xs text-muted-foreground mb-4">
+                      💡 This opens your messaging app with the farewell pre-written. You just hit send!
+                    </p>
 
                     <div className="flex gap-3">
                       <button

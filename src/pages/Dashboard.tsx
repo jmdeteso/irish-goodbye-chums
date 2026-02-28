@@ -195,19 +195,6 @@ const Dashboard = () => {
               )}
             </AnimatePresence>
 
-            {/* Next step hint after creating a party */}
-            {hasParties && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4"
-              >
-                <p className="text-sm text-foreground font-semibold mb-1">📋 Next step:</p>
-                <p className="text-sm text-muted-foreground">
-                  Copy the party link and send it to your mates! When they tap it, they'll check in. Once everyone's there, hit <strong className="text-primary">Irish Goodbye 🍀</strong> to send a farewell message when you slip away.
-                </p>
-              </motion.div>
-            )}
 
             <div className="flex flex-col gap-3">
               {parties.length === 0 ? (
