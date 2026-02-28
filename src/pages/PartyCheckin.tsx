@@ -430,11 +430,13 @@ const PartyCheckin = () => {
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {STICKERS.map((s) => (
                     <button
-                      key={s.emoji}
-                      onClick={() => addSticker(s.emoji)}
+                      key={s.label}
+                      onClick={() => addSticker(s.emoji, s.isImage)}
                       className="flex items-center gap-1 rounded-full bg-muted border border-border px-2.5 py-1 text-xs hover:border-primary/50 active:scale-95 transition-all"
                     >
-                      <span className="text-base">{s.emoji}</span>
+                      <span className="text-base">
+                        {s.isImage ? <img src={leprechaun} alt="Leprechaun" className="h-5 w-5 inline" /> : s.emoji}
+                      </span>
                       <span className="text-muted-foreground">{s.label}</span>
                     </button>
                   ))}
