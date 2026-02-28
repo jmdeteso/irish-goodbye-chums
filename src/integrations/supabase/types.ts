@@ -14,7 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      friends: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          phone_number: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          phone_number: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          phone_number?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      parties: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          share_code: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          share_code?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          share_code?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      party_checkins: {
+        Row: {
+          checked_in_at: string
+          friend_id: string
+          id: string
+          party_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          friend_id: string
+          id?: string
+          party_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          friend_id?: string
+          id?: string
+          party_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "party_checkins_friend_id_fkey"
+            columns: ["friend_id"]
+            isOneToOne: false
+            referencedRelation: "friends"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "party_checkins_party_id_fkey"
+            columns: ["party_id"]
+            isOneToOne: false
+            referencedRelation: "parties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id: string
+          name?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
