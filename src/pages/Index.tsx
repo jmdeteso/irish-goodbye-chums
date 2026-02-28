@@ -110,6 +110,20 @@ const Index = () => {
         </div>
       </main>
 
+      {/* Subtle sponsored hint */}
+      <div className="mx-auto max-w-lg px-4 pb-2">
+        <a
+          href="https://www.guinness.com"
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          className="flex items-center justify-center gap-2 rounded-lg border border-border/50 bg-card/60 px-4 py-2.5 opacity-60 hover:opacity-80 transition-opacity"
+        >
+          <span className="text-xs text-muted-foreground italic">
+            Pair your Irish exit with a proper pint 🍺
+          </span>
+        </a>
+      </div>
+
       {/* Footer */}
       <footer className="border-t border-border py-6 text-center">
         <div className="flex items-center justify-center gap-2">
