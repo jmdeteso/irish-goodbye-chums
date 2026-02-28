@@ -9,6 +9,14 @@ const GOODBYE_MESSAGES = [
   "👋 via Irish Goodbye App — Tiptoed out like a wee fairy, but had a brilliant time with ye! Cheers! 🧚",
 ];
 
+const HOST_THANK_YOU_MESSAGES = [
+  "🏠 via Irish Goodbye App — You absolute legend! Thanks a million for hosting — the craic was mighty and that's all down to you! Sláinte to the best host in Ireland! 🍀🥂",
+  "🏠 via Irish Goodbye App — I did the Irish exit BUT I couldn't leave without thanking the host! You threw a grand party and we're all grateful! You're a star! ⭐☘️",
+  "🏠 via Irish Goodbye App — Slipped away quietly, but wanted you to know — you put on one hell of a night! The hospitality would make the fairies jealous! 🧚💚",
+  "🏠 via Irish Goodbye App — Gone like a leprechaun at dawn, but this one's for YOU, host with the most! Thanks for everything — it was pure class! 🌈🍻",
+  "🏠 via Irish Goodbye App — Did the ol' Irish Goodbye but had to send a special thanks to the host! You made the magic happen tonight — legend! 🎉☘️",
+];
+
 export const getRandomMessage = () =>
   GOODBYE_MESSAGES[Math.floor(Math.random() * GOODBYE_MESSAGES.length)];
 
