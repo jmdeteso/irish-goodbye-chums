@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 const STICKERS = [
   { emoji: "☘️", label: "Shamrock" },
-  { emoji: "🧙‍♂️", label: "Leprechaun" },
+  { emoji: "leprechaun", label: "Leprechaun", isImage: true },
   { emoji: "🌈", label: "Rainbow" },
   { emoji: "🍺", label: "Beer" },
   { emoji: "🍷", label: "Wine" },
@@ -18,6 +18,7 @@ const STICKERS = [
 interface PlacedSticker {
   id: number;
   emoji: string;
+  isImage?: boolean;
   x: number;
   y: number;
   size: number;
@@ -128,16 +129,17 @@ const PartyCheckin = () => {
     reader.readAsDataURL(file);
   };
 
-  const addSticker = (emoji: string) => {
+  const addSticker = (emoji: string, isImage?: boolean) => {
     if (!uploadImage) return;
     setUploadStickers((prev) => [
       ...prev,
       {
         id: Date.now(),
         emoji,
+        isImage,
         x: 70 + Math.random() * 15,
         y: 70 + Math.random() * 15,
-        size: 32 + Math.random() * 16,
+        size: 40 + Math.random() * 16,
         rotation: 15 + Math.random() * 20,
       },
     ]);
@@ -157,21 +159,39 @@ const PartyCheckin = () => {
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(img, 0, 0);
 
-        uploadStickers.forEach((sticker) => {
-          const x = (sticker.x / 100) * canvas.width;
-          const y = (sticker.y / 100) * canvas.height;
-          const fontSize = (sticker.size / 100) * Math.min(canvas.width, canvas.height) * 0.15;
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate((sticker.rotation * Math.PI) / 180);
-          ctx.font = `${fontSize}px serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(sticker.emoji, 0, 0);
-          ctx.restore();
+        const stickerPromises = uploadStickers.map((sticker) => {
+          return new Promise<void>((res) => {
+            const x = (sticker.x / 100) * canvas.width;
+            const y = (sticker.y / 100) * canvas.height;
+            const stickerSize = (sticker.size / 100) * Math.min(canvas.width, canvas.height) * 0.15;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate((sticker.rotation * Math.PI) / 180);
+
+            if (sticker.isImage) {
+              const sImg = new Image();
+              sImg.crossOrigin = "anonymous";
+              sImg.onload = () => {
+                ctx.drawImage(sImg, -stickerSize / 2, -stickerSize / 2, stickerSize, stickerSize);
+                ctx.restore();
+                res();
+              };
+              sImg.onerror = () => { ctx.restore(); res(); };
+              sImg.src = leprechaun;
+            } else {
+              ctx.font = `${stickerSize}px serif`;
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(sticker.emoji, 0, 0);
+              ctx.restore();
+              res();
+            }
+          });
         });
 
-        canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
+        Promise.all(stickerPromises).then(() => {
+          canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
+        });
       };
       img.src = uploadImage;
     });
@@ -392,13 +412,17 @@ const PartyCheckin = () => {
                       style={{
                         left: `${sticker.x}%`,
                         top: `${sticker.y}%`,
-                        fontSize: `${sticker.size}px`,
+                        fontSize: sticker.isImage ? undefined : `${sticker.size}px`,
+                        width: sticker.isImage ? `${sticker.size}px` : undefined,
+                        height: sticker.isImage ? `${sticker.size}px` : undefined,
                         transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg)`,
                       }}
                       onClick={() => setUploadStickers((prev) => prev.filter((s) => s.id !== sticker.id))}
                       title="Tap to remove"
                     >
-                      {sticker.emoji}
+                      {sticker.isImage ? (
+                        <img src={leprechaun} alt="Leprechaun" className="w-full h-full object-contain" />
+                      ) : sticker.emoji}
                     </button>
                   ))}
                 </div>
@@ -406,11 +430,13 @@ const PartyCheckin = () => {
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {STICKERS.map((s) => (
                     <button
-                      key={s.emoji}
-                      onClick={() => addSticker(s.emoji)}
+                      key={s.label}
+                      onClick={() => addSticker(s.emoji, s.isImage)}
                       className="flex items-center gap-1 rounded-full bg-muted border border-border px-2.5 py-1 text-xs hover:border-primary/50 active:scale-95 transition-all"
                     >
-                      <span className="text-base">{s.emoji}</span>
+                      <span className="text-base">
+                        {s.isImage ? <img src={leprechaun} alt="Leprechaun" className="h-5 w-5 inline" /> : s.emoji}
+                      </span>
                       <span className="text-muted-foreground">{s.label}</span>
                     </button>
                   ))}
