@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import leprechaun from "@/assets/leprechaun.png";
 import { getRandomMessage } from "@/lib/contacts";
-import { Check } from "lucide-react";
+import { Check, Image as ImageIcon } from "lucide-react";
 
 interface PartyData {
   id: string;
@@ -17,6 +17,11 @@ interface FriendOption {
   name: string;
 }
 
+interface PartyPhoto {
+  id: string;
+  storage_path: string;
+}
+
 const PartyCheckin = () => {
   const { shareCode } = useParams<{ shareCode: string }>();
   const [party, setParty] = useState<PartyData | null>(null);
@@ -26,13 +31,14 @@ const PartyCheckin = () => {
   const [notFound, setNotFound] = useState(false);
   const [justCheckedIn, setJustCheckedIn] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [photos, setPhotos] = useState<PartyPhoto[]>([]);
+  const [showPhotos, setShowPhotos] = useState(false);
 
   useEffect(() => {
     if (shareCode) loadParty();
   }, [shareCode]);
 
   const loadParty = async () => {
-    // Find party by share code
     const { data: partyData } = await supabase
       .from("parties")
       .select("id, name, user_id")
@@ -48,24 +54,16 @@ const PartyCheckin = () => {
 
     setParty(partyData);
 
-    // Fetch friends belonging to party owner
-    const { data: friendsData } = await supabase
-      .from("friends")
-      .select("id, name")
-      .eq("user_id", partyData.user_id)
-      .order("name");
+    // Fetch friends, checkins, and photos in parallel
+    const [friendsRes, checkinsRes, photosRes] = await Promise.all([
+      supabase.from("friends").select("id, name").eq("user_id", partyData.user_id).order("name"),
+      supabase.from("party_checkins").select("friend_id").eq("party_id", partyData.id),
+      supabase.from("party_photos").select("id, storage_path").eq("party_id", partyData.id).order("created_at", { ascending: false }),
+    ]);
 
-    if (friendsData) setFriends(friendsData);
-
-    // Fetch existing check-ins
-    const { data: checkinsData } = await supabase
-      .from("party_checkins")
-      .select("friend_id")
-      .eq("party_id", partyData.id);
-
-    if (checkinsData) {
-      setCheckedIn(new Set(checkinsData.map((c) => c.friend_id)));
-    }
+    if (friendsRes.data) setFriends(friendsRes.data);
+    if (checkinsRes.data) setCheckedIn(new Set(checkinsRes.data.map((c) => c.friend_id)));
+    if (photosRes.data) setPhotos(photosRes.data);
 
     setLoading(false);
   };
@@ -78,14 +76,16 @@ const PartyCheckin = () => {
       friend_id: friendId,
     });
 
-    if (error) {
-      // Already checked in
-      return;
-    }
+    if (error) return;
 
     setCheckedIn((prev) => new Set([...prev, friendId]));
     setJustCheckedIn(friendId);
     setMessage(getRandomMessage());
+  };
+
+  const getPhotoUrl = (path: string) => {
+    const { data } = supabase.storage.from("party-photos").getPublicUrl(path);
+    return data.publicUrl;
   };
 
   if (loading) {
@@ -106,9 +106,7 @@ const PartyCheckin = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 text-center">
         <img src={leprechaun} alt="Sad leprechaun" className="h-20 w-20 mb-4 opacity-50" />
-        <h1 className="font-display text-2xl font-bold text-foreground mb-2">
-          Party Not Found
-        </h1>
+        <h1 className="font-display text-2xl font-bold text-foreground mb-2">Party Not Found</h1>
         <p className="text-muted-foreground">
           This party link might have expired or doesn't exist. Ask your mate for a new one!
         </p>
@@ -127,21 +125,57 @@ const PartyCheckin = () => {
           transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
         />
         <h1 className="font-display text-3xl font-black">{party!.name}</h1>
-        <p className="mt-2 text-primary-foreground/80">
-          Tap your name to check in! 🍀
-        </p>
+        <p className="mt-2 text-primary-foreground/80">Tap your name to check in! 🍀</p>
       </header>
 
       <main className="mx-auto max-w-lg px-4 py-6">
-        <h2 className="font-display text-lg font-bold text-foreground mb-4">
-          Who are ye?
-        </h2>
+        {/* Photos toggle */}
+        {photos.length > 0 && (
+          <button
+            onClick={() => setShowPhotos(!showPhotos)}
+            className="w-full mb-4 flex items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground shadow-gold hover:brightness-110 active:scale-95 transition-all"
+          >
+            <ImageIcon className="h-4 w-4" />
+            {showPhotos ? "Hide" : "View"} Party Pics ({photos.length}) 📸
+          </button>
+        )}
+
+        {/* Photo gallery */}
+        {showPhotos && photos.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            className="mb-6 overflow-hidden"
+          >
+            <div className="grid grid-cols-2 gap-2">
+              {photos.map((photo, i) => (
+                <motion.a
+                  key={photo.id}
+                  href={getPhotoUrl(photo.storage_path)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="aspect-square rounded-xl overflow-hidden border border-border hover:border-primary/50 transition-colors"
+                >
+                  <img
+                    src={getPhotoUrl(photo.storage_path)}
+                    alt={`Party photo ${i + 1}`}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </motion.a>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        <h2 className="font-display text-lg font-bold text-foreground mb-4">Who are ye?</h2>
 
         <div className="flex flex-col gap-2">
           {friends.map((friend, i) => {
             const isChecked = checkedIn.has(friend.id);
-            const justDone = justCheckedIn === friend.id;
-
             return (
               <motion.button
                 key={friend.id}
@@ -158,27 +192,15 @@ const PartyCheckin = () => {
               >
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold ${
-                    isChecked
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
+                    isChecked ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                   }`}
                 >
-                  {isChecked ? (
-                    <Check className="h-5 w-5" />
-                  ) : (
-                    friend.name.split(" ").map((n) => n[0]).join("").slice(0, 2)
-                  )}
+                  {isChecked ? <Check className="h-5 w-5" /> : friend.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                 </div>
-                <span
-                  className={`font-semibold ${
-                    isChecked ? "text-primary" : "text-foreground"
-                  }`}
-                >
+                <span className={`font-semibold ${isChecked ? "text-primary" : "text-foreground"}`}>
                   {friend.name}
                 </span>
-                {isChecked && (
-                  <span className="ml-auto text-sm text-primary">Checked in ✓</span>
-                )}
+                {isChecked && <span className="ml-auto text-sm text-primary">Checked in ✓</span>}
               </motion.button>
             );
           })}
@@ -198,9 +220,7 @@ const PartyCheckin = () => {
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 1, repeat: 2 }}
               />
-              <p className="text-sm font-medium text-foreground leading-relaxed">
-                {message}
-              </p>
+              <p className="text-sm font-medium text-foreground leading-relaxed">{message}</p>
             </div>
           </motion.div>
         )}
