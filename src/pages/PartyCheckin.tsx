@@ -1,10 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import leprechaun from "@/assets/leprechaun.png";
 import { getRandomMessage } from "@/lib/contacts";
-import { Check, Image as ImageIcon, Download } from "lucide-react";
+import { Check, Image as ImageIcon, Download, Camera, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+const STICKERS = [
+  { emoji: "☘️", label: "Shamrock" },
+  { emoji: "🧙‍♂️", label: "Leprechaun" },
+  { emoji: "🌈", label: "Rainbow" },
+  { emoji: "🍺", label: "Beer" },
+  { emoji: "🍷", label: "Wine" },
+];
+
+interface PlacedSticker {
+  id: number;
+  emoji: string;
+  x: number;
+  y: number;
+  size: number;
+  rotation: number;
+}
 
 interface PartyData {
   id: string;
@@ -34,6 +52,13 @@ const PartyCheckin = () => {
   const [photos, setPhotos] = useState<PartyPhoto[]>([]);
   const [showPhotos, setShowPhotos] = useState(false);
 
+  // Attendee photo upload state
+  const [uploadImage, setUploadImage] = useState<string | null>(null);
+  const [uploadStickers, setUploadStickers] = useState<PlacedSticker[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
   useEffect(() => {
     if (shareCode) loadParty();
   }, [shareCode]);
@@ -54,7 +79,6 @@ const PartyCheckin = () => {
 
     setParty(partyData);
 
-    // Fetch friends, checkins, and photos in parallel
     const [friendsRes, checkinsRes, photosRes] = await Promise.all([
       supabase.from("friends").select("id, name").eq("user_id", partyData.user_id).order("name"),
       supabase.from("party_checkins").select("friend_id").eq("party_id", partyData.id),
@@ -86,6 +110,110 @@ const PartyCheckin = () => {
   const getPhotoUrl = (path: string) => {
     const { data } = supabase.storage.from("party-photos").getPublicUrl(path);
     return data.publicUrl;
+  };
+
+  // Attendee photo upload handlers
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image too large! Max 10MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setUploadImage(ev.target?.result as string);
+      setUploadStickers([]);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const addSticker = (emoji: string) => {
+    if (!uploadImage) return;
+    setUploadStickers((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        emoji,
+        x: 30 + Math.random() * 40,
+        y: 30 + Math.random() * 40,
+        size: 32 + Math.random() * 16,
+        rotation: Math.random() * 40 - 20,
+      },
+    ]);
+  };
+
+  const renderCanvas = useCallback(async (): Promise<Blob | null> => {
+    const canvas = canvasRef.current;
+    if (!canvas || !uploadImage) return null;
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    return new Promise((resolve) => {
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0);
+
+        uploadStickers.forEach((sticker) => {
+          const x = (sticker.x / 100) * canvas.width;
+          const y = (sticker.y / 100) * canvas.height;
+          const fontSize = (sticker.size / 100) * Math.min(canvas.width, canvas.height) * 0.15;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate((sticker.rotation * Math.PI) / 180);
+          ctx.font = `${fontSize}px serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(sticker.emoji, 0, 0);
+          ctx.restore();
+        });
+
+        canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
+      };
+      img.src = uploadImage;
+    });
+  }, [uploadImage, uploadStickers]);
+
+  const handleUploadSave = async () => {
+    if (!party || !justCheckedIn) return;
+    setUploading(true);
+
+    try {
+      const blob = await renderCanvas();
+      if (!blob) throw new Error("Failed to render image");
+
+      const fileName = `${party.id}/${Date.now()}-attendee.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from("party-photos")
+        .upload(fileName, blob, { contentType: "image/jpeg" });
+
+      if (uploadError) throw uploadError;
+
+      const { error: dbError } = await supabase.from("party_photos").insert({
+        party_id: party.id,
+        friend_id: justCheckedIn,
+        storage_path: fileName,
+      });
+
+      if (dbError) throw dbError;
+
+      toast.success("Photo added to the party album! 📸");
+      setUploadImage(null);
+      setUploadStickers([]);
+      // Refresh photos
+      const { data: newPhotos } = await supabase
+        .from("party_photos")
+        .select("id, storage_path")
+        .eq("party_id", party.id)
+        .order("created_at", { ascending: false });
+      if (newPhotos) setPhotos(newPhotos);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload photo");
+    }
+    setUploading(false);
   };
 
   if (loading) {
@@ -231,12 +359,101 @@ const PartyCheckin = () => {
           </motion.div>
         )}
 
+        {/* Attendee photo upload — appears after check-in */}
+        {justCheckedIn && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-6 rounded-xl border border-border bg-card p-4"
+          >
+            <h3 className="font-display text-base font-bold text-foreground mb-2">
+              📸 Add a party pic!
+            </h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              Snap a photo and add some Irish flair — it'll show up in the party album for everyone!
+            </p>
+
+            {!uploadImage ? (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground shadow-gold hover:brightness-110 active:scale-95 transition-all"
+              >
+                <Camera className="h-4 w-4" /> Take or Choose Photo
+              </button>
+            ) : (
+              <>
+                <div className="relative rounded-xl overflow-hidden mb-3">
+                  <img src={uploadImage} alt="Your photo" className="w-full rounded-xl" />
+                  {uploadStickers.map((sticker) => (
+                    <button
+                      key={sticker.id}
+                      className="absolute cursor-pointer hover:scale-110 transition-transform"
+                      style={{
+                        left: `${sticker.x}%`,
+                        top: `${sticker.y}%`,
+                        fontSize: `${sticker.size}px`,
+                        transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg)`,
+                      }}
+                      onClick={() => setUploadStickers((prev) => prev.filter((s) => s.id !== sticker.id))}
+                      title="Tap to remove"
+                    >
+                      {sticker.emoji}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {STICKERS.map((s) => (
+                    <button
+                      key={s.emoji}
+                      onClick={() => addSticker(s.emoji)}
+                      className="flex items-center gap-1 rounded-full bg-muted border border-border px-2.5 py-1 text-xs hover:border-primary/50 active:scale-95 transition-all"
+                    >
+                      <span className="text-base">{s.emoji}</span>
+                      <span className="text-muted-foreground">{s.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setUploadImage(null); setUploadStickers([]); }}
+                    className="flex-1 rounded-full bg-muted px-4 py-2.5 text-sm font-semibold text-muted-foreground hover:brightness-95 transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleUploadSave}
+                    disabled={uploading}
+                    className="flex-1 flex items-center justify-center gap-2 rounded-full bg-gradient-irish px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-irish hover:brightness-110 active:scale-95 transition-all disabled:opacity-50"
+                  >
+                    {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add to Album 🍀"}
+                  </button>
+                </div>
+              </>
+            )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+          </motion.div>
+        )}
+
         {friends.length === 0 && (
           <p className="text-center py-8 text-muted-foreground">
             No friends added to this party yet. Tell the host to add some mates!
           </p>
         )}
       </main>
+
+      {/* Hidden canvas for rendering stickers onto image */}
+      <canvas ref={canvasRef} className="hidden" />
     </div>
   );
 };
