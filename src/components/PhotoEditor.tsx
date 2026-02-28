@@ -96,22 +96,39 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
         const ctx = canvas.getContext("2d")!;
         ctx.drawImage(img, 0, 0);
 
-        // Draw stickers
-        stickers.forEach((sticker) => {
-          const x = (sticker.x / 100) * canvas.width;
-          const y = (sticker.y / 100) * canvas.height;
-          const fontSize = (sticker.size / 100) * Math.min(canvas.width, canvas.height) * 0.15;
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate((sticker.rotation * Math.PI) / 180);
-          ctx.font = `${fontSize}px serif`;
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(sticker.emoji, 0, 0);
-          ctx.restore();
+        const stickerPromises = stickers.map((sticker) => {
+          return new Promise<void>((res) => {
+            const x = (sticker.x / 100) * canvas.width;
+            const y = (sticker.y / 100) * canvas.height;
+            const stickerSize = (sticker.size / 100) * Math.min(canvas.width, canvas.height) * 0.15;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate((sticker.rotation * Math.PI) / 180);
+
+            if (sticker.isImage) {
+              const sImg = new Image();
+              sImg.crossOrigin = "anonymous";
+              sImg.onload = () => {
+                ctx.drawImage(sImg, -stickerSize / 2, -stickerSize / 2, stickerSize, stickerSize);
+                ctx.restore();
+                res();
+              };
+              sImg.onerror = () => { ctx.restore(); res(); };
+              sImg.src = leprechaunImg;
+            } else {
+              ctx.font = `${stickerSize}px serif`;
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillText(sticker.emoji, 0, 0);
+              ctx.restore();
+              res();
+            }
+          });
         });
 
-        canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
+        Promise.all(stickerPromises).then(() => {
+          canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
+        });
       };
       img.src = displayImage;
     });
