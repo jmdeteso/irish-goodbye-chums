@@ -243,6 +243,16 @@ const Dashboard = () => {
           <FriendsList onUpdate={handleFriendsUpdated} />
         )}
       </main>
+
+      <AnimatePresence>
+        {inviteParty && (
+          <InviteFriendsModal
+            partyName={inviteParty.name}
+            shareLink={`${window.location.origin}/party/${inviteParty.share_code}`}
+            onClose={() => setInviteParty(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
