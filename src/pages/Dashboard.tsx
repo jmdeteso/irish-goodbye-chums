@@ -26,6 +26,7 @@ const Dashboard = () => {
   const [partyName, setPartyName] = useState("");
   const [activeTab, setActiveTab] = useState<"parties" | "friends">("parties");
   const [creating, setCreating] = useState(false);
+  const [inviteParty, setInviteParty] = useState<Party | null>(null);
 
   useEffect(() => {
     if (user) {
