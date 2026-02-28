@@ -7,7 +7,7 @@ import leprechaun from "@/assets/leprechaun.png";
 import { toast } from "sonner";
 import FriendsList from "@/components/FriendsList";
 import PartyCard from "@/components/PartyCard";
-import { Plus, LogOut, Users, PartyPopper } from "lucide-react";
+import { Plus, LogOut, Users, PartyPopper, ArrowRight } from "lucide-react";
 
 interface Party {
   id: string;
@@ -20,14 +20,25 @@ interface Party {
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const [parties, setParties] = useState<Party[]>([]);
+  const [friendCount, setFriendCount] = useState<number | null>(null);
   const [showNewParty, setShowNewParty] = useState(false);
   const [partyName, setPartyName] = useState("");
   const [activeTab, setActiveTab] = useState<"parties" | "friends">("parties");
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    if (user) fetchParties();
+    if (user) {
+      fetchParties();
+      fetchFriendCount();
+    }
   }, [user]);
+
+  // Auto-start on friends tab if user has no friends yet
+  useEffect(() => {
+    if (friendCount === 0) {
+      setActiveTab("friends");
+    }
+  }, [friendCount]);
 
   const fetchParties = async () => {
     const { data } = await supabase
@@ -35,6 +46,13 @@ const Dashboard = () => {
       .select("*")
       .order("created_at", { ascending: false });
     if (data) setParties(data);
+  };
+
+  const fetchFriendCount = async () => {
+    const { count } = await supabase
+      .from("friends")
+      .select("*", { count: "exact", head: true });
+    setFriendCount(count ?? 0);
   };
 
   const createParty = async (e: React.FormEvent) => {
@@ -48,7 +66,7 @@ const Dashboard = () => {
     if (error) {
       toast.error("Failed to create party");
     } else {
-      toast.success("Party created! Share the link with your mates 🎉");
+      toast.success("Party created! Now copy the link and share it 🎉");
       setPartyName("");
       setShowNewParty(false);
       fetchParties();
@@ -56,8 +74,15 @@ const Dashboard = () => {
     setCreating(false);
   };
 
+  const handleFriendsUpdated = () => {
+    fetchFriendCount();
+  };
+
   if (loading) return null;
   if (!user) return <Navigate to="/auth" replace />;
+
+  const hasFriends = (friendCount ?? 0) > 0;
+  const hasParties = parties.length > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,6 +133,28 @@ const Dashboard = () => {
       <main className="mx-auto max-w-lg px-4 py-6">
         {activeTab === "parties" && (
           <>
+            {/* Hint: add friends first */}
+            {!hasFriends && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 rounded-xl border border-secondary bg-secondary/10 p-4"
+              >
+                <p className="text-sm font-semibold text-foreground mb-2">
+                  👋 First things first!
+                </p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Add some mates before creating a party — they'll be the ones you ping when you do the Irish exit!
+                </p>
+                <button
+                  onClick={() => setActiveTab("friends")}
+                  className="flex items-center gap-1.5 rounded-full bg-secondary px-4 py-2 text-sm font-semibold text-secondary-foreground shadow-gold hover:brightness-110 active:scale-95 transition-all"
+                >
+                  Add Friends First <ArrowRight className="h-4 w-4" />
+                </button>
+              </motion.div>
+            )}
+
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-xl font-bold text-foreground">Your Parties</h2>
               <button
@@ -148,6 +195,20 @@ const Dashboard = () => {
               )}
             </AnimatePresence>
 
+            {/* Next step hint after creating a party */}
+            {hasParties && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4"
+              >
+                <p className="text-sm text-foreground font-semibold mb-1">📋 Next step:</p>
+                <p className="text-sm text-muted-foreground">
+                  Copy the party link and send it to your mates! When they tap it, they'll check in. Once everyone's there, hit <strong className="text-primary">Irish Goodbye 🍀</strong> to send a farewell message when you slip away.
+                </p>
+              </motion.div>
+            )}
+
             <div className="flex flex-col gap-3">
               {parties.length === 0 ? (
                 <div className="text-center py-12">
@@ -158,7 +219,11 @@ const Dashboard = () => {
                     animate={{ y: [0, -5, 0] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   />
-                  <p className="text-muted-foreground">No parties yet! Create one to get started.</p>
+                  <p className="text-muted-foreground">
+                    {hasFriends
+                      ? "No parties yet! Create one and share the link with your mates."
+                      : "No parties yet. Add some friends first, then create a party!"}
+                  </p>
                 </div>
               ) : (
                 parties.map((party, i) => (
@@ -176,7 +241,9 @@ const Dashboard = () => {
           </>
         )}
 
-        {activeTab === "friends" && <FriendsList />}
+        {activeTab === "friends" && (
+          <FriendsList onUpdate={handleFriendsUpdated} />
+        )}
       </main>
     </div>
   );
