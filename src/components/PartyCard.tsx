@@ -31,6 +31,7 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
   const [showGoodbye, setShowGoodbye] = useState(false);
   const [showCheckins, setShowCheckins] = useState(false);
   const [goodbyeSent, setGoodbyeSent] = useState(false);
+  const [hostId, setHostId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCheckins();
