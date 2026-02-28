@@ -271,11 +271,13 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
               <div className="flex flex-wrap gap-2">
                 {STICKERS.map((s) => (
                   <button
-                    key={s.emoji}
-                    onClick={() => addSticker(s.emoji)}
+                    key={s.label}
+                    onClick={() => addSticker(s.emoji, s.isImage)}
                     className="flex items-center gap-1.5 rounded-full bg-card border border-border px-3 py-1.5 text-sm hover:border-primary/50 active:scale-95 transition-all"
                   >
-                    <span className="text-lg">{s.emoji}</span>
+                    <span className="text-lg">
+                      {s.isImage ? <img src={leprechaunImg} alt="Leprechaun" className="h-5 w-5 inline" /> : s.emoji}
+                    </span>
                     <span className="text-muted-foreground">{s.label}</span>
                   </button>
                 ))}
