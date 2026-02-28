@@ -56,7 +56,7 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
     reader.readAsDataURL(file);
   };
 
-  const addSticker = (emoji: string) => {
+  const addSticker = (emoji: string, isImage?: boolean) => {
     if (!image) {
       toast.error("Upload a photo first!");
       return;
@@ -66,9 +66,10 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
       {
         id: Date.now(),
         emoji,
+        isImage,
         x: 70 + Math.random() * 15,
         y: 70 + Math.random() * 15,
-        size: 32 + Math.random() * 16,
+        size: 40 + Math.random() * 16,
         rotation: 15 + Math.random() * 20,
       },
     ]);
