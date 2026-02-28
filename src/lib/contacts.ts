@@ -1,12 +1,12 @@
 const GOODBYE_MESSAGES = [
-  "Sure look, I had a grand time! Sláinte! 🍀",
-  "Off like a leprechaun in the night! Had a mighty craic! ☘️",
-  "Slipped away like the mist over the hills! Miss ye already! 🌈",
-  "Did the ol' Irish Goodbye — but me heart stays! 💚",
-  "Gone before the last round, but the memories stay forever! 🍻",
-  "Vanished like a pot of gold — but the fun was real! ✨",
-  "Pulled a classic Irish exit! Thanks for the craic! 🎶",
-  "Tiptoed out like a wee fairy — had a brilliant time! 🧚",
+  "👋 via Irish Goodbye App — Sure look, I had a grand time with ye! Slipped away but didn't want to leave without saying cheers! Sláinte! 🍀",
+  "👋 via Irish Goodbye App — I pulled the classic Irish exit, but this wee leprechaun wanted you to know I had a mighty craic! ☘️",
+  "👋 via Irish Goodbye App — Slipped away like the mist over the hills! Didn't want ye thinking I vanished — miss ye already! 🌈",
+  "👋 via Irish Goodbye App — Did the ol' Irish Goodbye but me heart stays with ye! Had an absolute blast! 💚",
+  "👋 via Irish Goodbye App — Gone before the last round, but the memories stay forever! This leprechaun is sending ye love! 🍻",
+  "👋 via Irish Goodbye App — Vanished like a pot of gold, but the fun was real! Download Irish Goodbye so you can ghost me back! ✨",
+  "👋 via Irish Goodbye App — Pulled a classic Irish exit! Thanks for the craic — this wee fella wanted to say goodbye for me! 🎶",
+  "👋 via Irish Goodbye App — Tiptoed out like a wee fairy, but had a brilliant time with ye! Cheers! 🧚",
 ];
 
 export const getRandomMessage = () =>
