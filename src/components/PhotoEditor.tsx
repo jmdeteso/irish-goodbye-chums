@@ -231,13 +231,17 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
                     style={{
                       left: `${sticker.x}%`,
                       top: `${sticker.y}%`,
-                      fontSize: `${sticker.size}px`,
+                      fontSize: sticker.isImage ? undefined : `${sticker.size}px`,
+                      width: sticker.isImage ? `${sticker.size}px` : undefined,
+                      height: sticker.isImage ? `${sticker.size}px` : undefined,
                       transform: `translate(-50%, -50%) rotate(${sticker.rotation}deg)`,
                     }}
                     onClick={() => removeSticker(sticker.id)}
                     title="Click to remove"
                   >
-                    {sticker.emoji}
+                    {sticker.isImage ? (
+                      <img src={leprechaunImg} alt="Leprechaun" className="w-full h-full object-contain" />
+                    ) : sticker.emoji}
                   </motion.button>
                 ))}
               {/* Change photo button */}
