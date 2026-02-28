@@ -95,21 +95,19 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
         ctx.drawImage(img, 0, 0);
 
         // Draw stickers
-        if (!aiResult) {
-          stickers.forEach((sticker) => {
-            const x = (sticker.x / 100) * canvas.width;
-            const y = (sticker.y / 100) * canvas.height;
-            const fontSize = (sticker.size / 100) * Math.min(canvas.width, canvas.height) * 0.15;
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate((sticker.rotation * Math.PI) / 180);
-            ctx.font = `${fontSize}px serif`;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(sticker.emoji, 0, 0);
-            ctx.restore();
-          });
-        }
+        stickers.forEach((sticker) => {
+          const x = (sticker.x / 100) * canvas.width;
+          const y = (sticker.y / 100) * canvas.height;
+          const fontSize = (sticker.size / 100) * Math.min(canvas.width, canvas.height) * 0.15;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate((sticker.rotation * Math.PI) / 180);
+          ctx.font = `${fontSize}px serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(sticker.emoji, 0, 0);
+          ctx.restore();
+        });
 
         canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
       };
