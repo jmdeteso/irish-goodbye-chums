@@ -50,7 +50,6 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
     const reader = new FileReader();
     reader.onload = (ev) => {
       setImage(ev.target?.result as string);
-      setAiResult(null);
       setStickers([]);
     };
     reader.readAsDataURL(file);
