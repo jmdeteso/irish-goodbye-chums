@@ -17,11 +17,31 @@ const HOST_THANK_YOU_MESSAGES = [
   "🏠 via Irish Goodbye App — Did the ol' Irish Goodbye but had to send a special thanks to the host! You made the magic happen tonight — legend! 🎉☘️",
 ];
 
+const WALK_ME_HOME_MESSAGES = [
+  "🚶‍♀️ via Irish Goodbye App — Hey! I'm heading home from the party and would love some company on the walk. Any chance one of ye could join me? Safety in numbers, as me granny always said! 🍀",
+  "🚶‍♀️ via Irish Goodbye App — Right, I'm making me exit! Would any of ye legends fancy walking with me? A pal on the path home would be grand! ☘️💚",
+  "🚶‍♀️ via Irish Goodbye App — Slipping away now but the road home is long and dark! Any takers for a wee walk together? I'll owe ye a pint! 🍻🌙",
+  "🚶‍♀️ via Irish Goodbye App — The craic was mighty but this lass needs an escort home! Who's up for a stroll? Promise I'm grand company! 🧚✨",
+  "🚶‍♀️ via Irish Goodbye App — Heading off now — would love a walking buddy to get home safe! Any volunteers? The fairies will bless ye! 🌈🍀",
+];
+
+const TRACK_ME_HOME_MESSAGES = [
+  "📍 via Irish Goodbye App — Hey! I'm heading home solo. Would ye mind keeping an eye on me location til I'm back safe? Sharing it now — thanks a million! 🍀💚",
+  "📍 via Irish Goodbye App — Right, I'm off! Sharing me location so ye know I got home in one piece. Check in on me, will ye? Sláinte! ☘️🏠",
+  "📍 via Irish Goodbye App — Making the Irish exit but want someone to know I'm grand! Here's me location — give us a shout if I go off course! 🌙🍀",
+];
+
 export const getRandomMessage = () =>
   GOODBYE_MESSAGES[Math.floor(Math.random() * GOODBYE_MESSAGES.length)];
 
 export const getRandomHostMessage = () =>
   HOST_THANK_YOU_MESSAGES[Math.floor(Math.random() * HOST_THANK_YOU_MESSAGES.length)];
+
+export const getRandomWalkMeHomeMessage = () =>
+  WALK_ME_HOME_MESSAGES[Math.floor(Math.random() * WALK_ME_HOME_MESSAGES.length)];
+
+export const getRandomTrackMeHomeMessage = () =>
+  TRACK_ME_HOME_MESSAGES[Math.floor(Math.random() * TRACK_ME_HOME_MESSAGES.length)];
 
 export interface Contact {
   id: string;

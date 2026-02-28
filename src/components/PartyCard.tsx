@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Copy, Users, Trash2, Camera, Send, Share2, Check, Crown } from "lucide-react";
+import { Copy, Users, Trash2, Camera, Send, Share2, Check, Crown, Shield, MapPin } from "lucide-react";
 import PhotoEditor from "@/components/PhotoEditor";
-import { getRandomMessage, getRandomHostMessage } from "@/lib/contacts";
+import { getRandomMessage, getRandomHostMessage, getRandomWalkMeHomeMessage, getRandomTrackMeHomeMessage } from "@/lib/contacts";
 
 interface Party {
   id: string;
@@ -337,9 +337,59 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
                     <h2 className="font-display text-2xl font-bold text-foreground mb-2">
                       You've Done the Irish Exit!
                     </h2>
-                    <p className="text-muted-foreground mb-6">
+                    <p className="text-muted-foreground mb-4">
                       Slipped away like the mist over the hills. Well done! 💚
                     </p>
+
+                    {/* Get Home Safe section */}
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 mb-4 text-left">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Shield className="h-5 w-5 text-primary" />
+                        <h3 className="font-display text-base font-bold text-foreground">
+                          Get Home Safe 🏠
+                        </h3>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Heading home? Let your mates help you get there safely.
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={() => {
+                            const message = getRandomWalkMeHomeMessage();
+                            if (navigator.share) {
+                              navigator.share({ title: "Walk Me Home 🍀", text: message }).catch(() => {
+                                const phones = checkedInFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
+                                window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
+                              });
+                            } else if (checkedInFriends.length > 0) {
+                              const phones = checkedInFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
+                              window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
+                            }
+                          }}
+                          className="w-full flex items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all"
+                        >
+                          <Users className="h-4 w-4" /> Walk Me Home 🚶‍♀️
+                        </button>
+                        <button
+                          onClick={() => {
+                            const message = getRandomTrackMeHomeMessage();
+                            if (navigator.share) {
+                              navigator.share({ title: "Track Me Home 📍", text: message }).catch(() => {
+                                const phones = checkedInFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
+                                window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
+                              });
+                            } else if (checkedInFriends.length > 0) {
+                              const phones = checkedInFriends.map(f => f.friends.phone_number.replace(/\D/g, "")).join(",");
+                              window.open(`sms:${phones}?body=${encodeURIComponent(message)}`, "_blank");
+                            }
+                          }}
+                          className="w-full flex items-center justify-center gap-2 rounded-full bg-muted px-4 py-2.5 text-sm font-semibold text-foreground hover:brightness-95 active:scale-95 transition-all"
+                        >
+                          <MapPin className="h-4 w-4" /> Share My Location 📍
+                        </button>
+                      </div>
+                    </div>
+
                     <button
                       onClick={() => {
                         setShowGoodbye(false);
@@ -347,7 +397,7 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
                       }}
                       className="rounded-full bg-gradient-irish px-6 py-3 text-sm font-bold text-primary-foreground shadow-irish hover:brightness-110 active:scale-95 transition-all"
                     >
-                      Grand so! ☘️
+                      Grand so, I'm grand! ☘️
                     </button>
                   </>
                 )}
