@@ -64,8 +64,8 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
       {
         id: Date.now(),
         emoji,
-        x: 75 + Math.random() * 15,
-        y: 75 + Math.random() * 15,
+        x: 70 + Math.random() * 15,
+        y: 70 + Math.random() * 15,
         size: 32 + Math.random() * 16,
         rotation: Math.random() * 40 - 20,
       },
