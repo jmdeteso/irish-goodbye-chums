@@ -194,12 +194,28 @@ const PartyCard = ({ party, onUpdate }: PartyCardProps) => {
         <div className="flex flex-col gap-2">
           {/* Primary action: share link or irish goodbye */}
           {checkinCount > 0 ? (
-            <button
+            <motion.button
               onClick={handleIrishGoodbye}
-              className="w-full flex items-center justify-center gap-2 rounded-full bg-gradient-irish px-4 py-3 text-sm font-bold text-primary-foreground shadow-irish hover:brightness-110 active:scale-95 transition-all"
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative w-full flex items-center justify-center gap-3 rounded-2xl bg-gradient-irish px-6 py-5 text-lg font-black text-primary-foreground shadow-irish transition-all overflow-hidden group"
             >
-              <Send className="h-4 w-4" /> Do the Irish Goodbye 🍀
-            </button>
+              {/* Pulsing glow behind */}
+              <motion.span
+                className="absolute inset-0 rounded-2xl bg-primary-foreground/10"
+                animate={{ opacity: [0, 0.2, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              />
+              {/* Big shamrock icon */}
+              <motion.span
+                className="text-3xl relative z-10"
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                ☘️
+              </motion.span>
+              <span className="relative z-10">Irish Goodbye!</span>
+            </motion.button>
           ) : null}
 
           <div className="flex gap-2">
