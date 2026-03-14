@@ -2,12 +2,14 @@ import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import leprechaun from "@/assets/leprechaun.png";
 import { toast } from "sonner";
 
 const Auth = () => {
   const { user, loading, signIn, signUp } = useAuth();
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -30,12 +32,21 @@ const Auth = () => {
     e.preventDefault();
     setSubmitting(true);
 
-    if (isSignUp) {
+    if (isForgotPassword) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Password reset link sent! Check your email ☘️");
+      }
+    } else if (isSignUp) {
       const { error } = await signUp(email, password, name);
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("Check your email to confirm your account! ☘️");
+        toast.success("Account created! You're in 🍀");
       }
     } else {
       const { error } = await signIn(email, password);
@@ -65,12 +76,12 @@ const Auth = () => {
             Irish Goodbye
           </h1>
           <p className="text-muted-foreground mt-1">
-            {isSignUp ? "Create your account" : "Welcome back!"}
+            {isForgotPassword ? "Reset your password" : isSignUp ? "Create your account" : "Welcome back!"}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {isSignUp && (
+          {isSignUp && !isForgotPassword && (
             <input
               type="text"
               placeholder="Your name"
@@ -88,31 +99,44 @@ const Auth = () => {
             required
             className="rounded-lg border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className="rounded-lg border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+          {!isForgotPassword && (
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="rounded-lg border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          )}
           <button
             type="submit"
             disabled={submitting}
             className="rounded-full bg-gradient-irish px-6 py-3 font-semibold text-primary-foreground shadow-irish transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
           >
-            {submitting ? "Hold on..." : isSignUp ? "Sign Up 🍀" : "Sign In 🍀"}
+            {submitting ? "Hold on..." : isForgotPassword ? "Send Reset Link ☘️" : isSignUp ? "Sign Up 🍀" : "Sign In 🍀"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+        {!isSignUp && !isForgotPassword && (
+          <p className="mt-3 text-center text-sm">
+            <button
+              onClick={() => setIsForgotPassword(true)}
+              className="text-muted-foreground hover:text-primary hover:underline"
+            >
+              Forgot password?
+            </button>
+          </p>
+        )}
+
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          {isForgotPassword ? "Remember it?" : isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
+            onClick={() => { setIsSignUp(isForgotPassword ? false : !isSignUp); setIsForgotPassword(false); }}
             className="font-semibold text-primary hover:underline"
           >
-            {isSignUp ? "Sign in" : "Sign up"}
+            {isForgotPassword ? "Sign in" : isSignUp ? "Sign in" : "Sign up"}
           </button>
         </p>
       </motion.div>
