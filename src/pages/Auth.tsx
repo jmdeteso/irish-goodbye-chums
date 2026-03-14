@@ -76,12 +76,12 @@ const Auth = () => {
             Irish Goodbye
           </h1>
           <p className="text-muted-foreground mt-1">
-            {isSignUp ? "Create your account" : "Welcome back!"}
+            {isForgotPassword ? "Reset your password" : isSignUp ? "Create your account" : "Welcome back!"}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {isSignUp && (
+          {isSignUp && !isForgotPassword && (
             <input
               type="text"
               placeholder="Your name"
