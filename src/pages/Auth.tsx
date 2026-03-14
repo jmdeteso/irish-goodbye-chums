@@ -99,31 +99,44 @@ const Auth = () => {
             required
             className="rounded-lg border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            className="rounded-lg border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          />
+          {!isForgotPassword && (
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="rounded-lg border border-border bg-card px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          )}
           <button
             type="submit"
             disabled={submitting}
             className="rounded-full bg-gradient-irish px-6 py-3 font-semibold text-primary-foreground shadow-irish transition-all hover:brightness-110 active:scale-95 disabled:opacity-50"
           >
-            {submitting ? "Hold on..." : isSignUp ? "Sign Up 🍀" : "Sign In 🍀"}
+            {submitting ? "Hold on..." : isForgotPassword ? "Send Reset Link ☘️" : isSignUp ? "Sign Up 🍀" : "Sign In 🍀"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+        {!isSignUp && !isForgotPassword && (
+          <p className="mt-3 text-center text-sm">
+            <button
+              onClick={() => setIsForgotPassword(true)}
+              className="text-muted-foreground hover:text-primary hover:underline"
+            >
+              Forgot password?
+            </button>
+          </p>
+        )}
+
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          {isForgotPassword ? "Remember it?" : isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
+            onClick={() => { setIsSignUp(isForgotPassword ? false : !isSignUp); setIsForgotPassword(false); }}
             className="font-semibold text-primary hover:underline"
           >
-            {isSignUp ? "Sign in" : "Sign up"}
+            {isForgotPassword ? "Sign in" : isSignUp ? "Sign in" : "Sign up"}
           </button>
         </p>
       </motion.div>
