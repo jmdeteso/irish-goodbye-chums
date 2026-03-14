@@ -32,12 +32,21 @@ const Auth = () => {
     e.preventDefault();
     setSubmitting(true);
 
-    if (isSignUp) {
+    if (isForgotPassword) {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Password reset link sent! Check your email ☘️");
+      }
+    } else if (isSignUp) {
       const { error } = await signUp(email, password, name);
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("Check your email to confirm your account! ☘️");
+        toast.success("Account created! You're in 🍀");
       }
     } else {
       const { error } = await signIn(email, password);
