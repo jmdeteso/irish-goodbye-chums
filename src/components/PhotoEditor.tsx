@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Camera, Download, X, Loader2 } from "lucide-react";
+import { Camera, Download, X, Loader2, Trash2 } from "lucide-react";
 import leprechaunImg from "@/assets/leprechaun.png";
 
 interface PhotoEditorProps {
@@ -20,6 +20,12 @@ const STICKERS = [
   { emoji: "🍷", label: "Wine" },
 ];
 
+interface PartyPhoto {
+  id: string;
+  storage_path: string;
+  created_at: string;
+}
+
 interface PlacedSticker {
   id: number;
   emoji: string;
@@ -35,9 +41,55 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
   const [image, setImage] = useState<string | null>(null);
   const [stickers, setStickers] = useState<PlacedSticker[]>([]);
   const [saving, setSaving] = useState(false);
+  const [photos, setPhotos] = useState<PartyPhoto[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      const { data, error } = await supabase
+        .from("party_photos")
+        .select("id, storage_path, created_at")
+        .eq("party_id", partyId)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        setPhotos(data);
+      }
+      setLoadingPhotos(false);
+    };
+    fetchPhotos();
+  }, [partyId]);
+
+  const getPhotoUrl = (path: string) => {
+    const { data } = supabase.storage.from("party-photos").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  const handleDeletePhoto = async (photo: PartyPhoto) => {
+    setDeletingId(photo.id);
+    try {
+      const { error: storageError } = await supabase.storage
+        .from("party-photos")
+        .remove([photo.storage_path]);
+      if (storageError) throw storageError;
+
+      const { error: dbError } = await supabase
+        .from("party_photos")
+        .delete()
+        .eq("id", photo.id);
+      if (dbError) throw dbError;
+
+      setPhotos((prev) => prev.filter((p) => p.id !== photo.id));
+      toast.success("Photo deleted 🗑️");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete photo");
+    }
+    setDeletingId(null);
+  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -203,6 +255,48 @@ const PhotoEditor = ({ partyId, partyName, onClose }: PhotoEditorProps) => {
         </div>
 
         <div className="p-4">
+          {/* Party album (existing photos, host can delete) */}
+          {!loadingPhotos && (
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-foreground mb-2">
+                Party album
+              </h3>
+              {photos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No photos yet! Add the first one below.
+                </p>
+              ) : (
+                <div className="grid grid-cols-4 gap-2">
+                  {photos.map((photo) => (
+                    <div
+                      key={photo.id}
+                      className="relative aspect-square rounded-xl overflow-hidden border border-border"
+                    >
+                      <img
+                        src={getPhotoUrl(photo.storage_path)}
+                        alt="Party photo"
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <button
+                        onClick={() => handleDeletePhoto(photo)}
+                        disabled={deletingId === photo.id}
+                        className="absolute top-1 right-1 rounded-full bg-foreground/50 text-primary-foreground p-1 hover:bg-destructive transition-colors disabled:opacity-50"
+                        title="Delete photo"
+                      >
+                        {deletingId === photo.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Image area */}
           {!displayImage ? (
             <button
