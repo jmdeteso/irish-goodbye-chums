@@ -32,6 +32,7 @@ const FriendsList = ({ onUpdate }: FriendsListProps) => {
     const { data } = await supabase
       .from("friends")
       .select("id, name, phone_number")
+      .eq("user_id", user.id)
       .order("name");
     if (data) setFriends(data);
   };

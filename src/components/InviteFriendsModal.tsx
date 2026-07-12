@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Check, Send, X } from "lucide-react";
 
 interface Friend {
@@ -16,6 +17,7 @@ interface InviteFriendsModalProps {
 }
 
 const InviteFriendsModal = ({ partyName, shareLink, onClose }: InviteFriendsModalProps) => {
+  const { user } = useAuth();
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
@@ -24,6 +26,7 @@ const InviteFriendsModal = ({ partyName, shareLink, onClose }: InviteFriendsModa
       const { data } = await supabase
         .from("friends")
         .select("id, name, phone_number")
+        .eq("user_id", user!.id)
         .order("name");
       if (data) {
         setFriends(data);

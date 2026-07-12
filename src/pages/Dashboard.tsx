@@ -46,6 +46,7 @@ const Dashboard = () => {
     const { data } = await supabase
       .from("parties")
       .select("*")
+      .eq("user_id", user!.id)
       .order("created_at", { ascending: false });
     if (data) setParties(data);
   };
@@ -53,7 +54,8 @@ const Dashboard = () => {
   const fetchFriendCount = async () => {
     const { count } = await supabase
       .from("friends")
-      .select("*", { count: "exact", head: true });
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user!.id);
     setFriendCount(count ?? 0);
   };
 
@@ -74,6 +76,7 @@ const Dashboard = () => {
       const { data: newParties } = await supabase
         .from("parties")
         .select("*")
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: false });
       if (newParties) {
         setParties(newParties);

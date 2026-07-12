@@ -65,31 +65,25 @@ const PartyCheckin = () => {
   }, [shareCode]);
 
   const loadParty = async () => {
-    const { data: partyData } = await supabase
-      .from("parties")
-      .select("id, name, user_id")
-      .eq("share_code", shareCode)
-      .eq("is_active", true)
-      .single();
+    const { data, error } = await supabase.rpc("get_checkin_page_data", { p_share_code: shareCode });
 
-    if (!partyData) {
+    if (error || !data) {
       setNotFound(true);
       setLoading(false);
       return;
     }
 
-    setParty(partyData);
+    const result = data as {
+      party: { id: string; name: string; user_id: string };
+      friends: { id: string; name: string }[];
+      checkins: { friend_id: string }[];
+      photos: { id: string; storage_path: string }[];
+    };
 
-    const [friendsRes, checkinsRes, photosRes] = await Promise.all([
-      supabase.from("friends").select("id, name").eq("user_id", partyData.user_id).order("name"),
-      supabase.from("party_checkins").select("friend_id").eq("party_id", partyData.id),
-      supabase.from("party_photos").select("id, storage_path").eq("party_id", partyData.id).order("created_at", { ascending: false }),
-    ]);
-
-    if (friendsRes.data) setFriends(friendsRes.data);
-    if (checkinsRes.data) setCheckedIn(new Set(checkinsRes.data.map((c) => c.friend_id)));
-    if (photosRes.data) setPhotos(photosRes.data);
-
+    setParty(result.party);
+    setFriends(result.friends);
+    setCheckedIn(new Set(result.checkins.map((c) => c.friend_id)));
+    setPhotos(result.photos);
     setLoading(false);
   };
 
