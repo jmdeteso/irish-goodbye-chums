@@ -115,7 +115,14 @@ const Dashboard = () => {
         <div className="mx-auto max-w-lg">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <img src={leprechaun} alt="Leprechaun" className="h-10 w-10" />
+              <motion.img
+                src={leprechaun}
+                alt="Leprechaun"
+                className="h-10 w-10 origin-bottom"
+                initial={{ rotate: 0, y: 0, x: 0 }}
+                animate={{ rotate: [0, -12, 10, -10, 8, -4, 0], y: [0, -6, 0, -7, 0, -3, 0], x: [0, -2, 2, -2, 2, -1, 0] }}
+                transition={{ duration: 1.9, ease: "easeInOut", times: [0, 0.16, 0.33, 0.5, 0.66, 0.83, 1], repeat: 1 }}
+              />
               <h1 className="font-display text-2xl font-black">Irish Goodbye</h1>
             </div>
             <button
